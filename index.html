@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Car Spec Comparison</title>
+    <title>Smart Car Comparison</title>
     <style>
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -21,38 +21,77 @@
         max-width: 1200px;
         margin: 0 auto;
       }
-      .controls {
+
+      /* New Control Styles */
+      .controls-container {
         display: flex;
         justify-content: center;
-        gap: 20px;
+        gap: 30px;
         margin-bottom: 30px;
         flex-wrap: wrap;
       }
-      .select-wrapper {
-        position: relative;
+
+      .control-group {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         width: 100%;
         max-width: 400px;
+        border-top: 5px solid #3498db;
       }
+
+      .control-group h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #2c3e50;
+        font-size: 1.1em;
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .select-label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: 0.9em;
+        color: #666;
+        font-weight: 600;
+      }
+
+      .select-wrapper {
+        position: relative;
+        margin-bottom: 15px;
+      }
+
       select {
         width: 100%;
-        padding: 12px 15px;
-        font-size: 16px;
+        padding: 10px 15px;
+        font-size: 15px;
         border: 1px solid #ddd;
-        border-radius: 8px;
+        border-radius: 6px;
         appearance: none;
-        background-color: white;
+        background-color: #f9f9f9;
         cursor: pointer;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
         transition: all 0.3s ease;
       }
+
+      select:disabled {
+        background-color: #eee;
+        color: #aaa;
+        cursor: not-allowed;
+      }
+
       select:focus {
         outline: none;
         border-color: #3498db;
-        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        background-color: white;
+        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
       }
+
       .select-wrapper::after {
         content: "▼";
-        font-size: 12px;
+        font-size: 10px;
         color: #999;
         position: absolute;
         right: 15px;
@@ -61,6 +100,7 @@
         pointer-events: none;
       }
 
+      /* Result Styles */
       .comparison-card {
         background: white;
         border-radius: 12px;
@@ -109,14 +149,6 @@
         border: none;
         padding: 20px;
       }
-      .header-row th:first-child {
-        background-color: #2980b9;
-      }
-
-      tr:last-child td,
-      tr:last-child th {
-        border-bottom: none;
-      }
 
       tbody tr:hover {
         background-color: #fafafa;
@@ -132,14 +164,16 @@
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
       }
 
-      /* Highlight Style */
       .winner-text {
         font-weight: bold;
-        color: #27ae60; /* Green color for better specs */
+        color: #27ae60;
+        background-color: rgba(39, 174, 96, 0.1);
+        padding: 2px 5px;
+        border-radius: 4px;
       }
 
       @media (max-width: 768px) {
-        .controls {
+        .controls-container {
           flex-direction: column;
           align-items: center;
         }
@@ -148,38 +182,60 @@
           padding: 10px;
           font-size: 14px;
         }
-        .header-row th {
-          font-size: 1em;
-        }
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>🚗 Car Comparison Tool</h1>
+      <h1>🚗 Smart Car Comparison Tool</h1>
 
-      <div class="controls">
-        <div class="select-wrapper">
-          <select id="car1" onchange="compareCars()">
-            <option value="">-- Select First Car --</option>
-          </select>
+      <div class="controls-container">
+        <div class="control-group">
+          <h3>Car 1</h3>
+
+          <span class="select-label">Step 1: Select Brand</span>
+          <div class="select-wrapper">
+            <select id="brand1" onchange="updateModels(1)">
+              <option value="">-- Choose Brand --</option>
+            </select>
+          </div>
+
+          <span class="select-label">Step 2: Select Model</span>
+          <div class="select-wrapper">
+            <select id="car1" onchange="compareCars()" disabled>
+              <option value="">-- First Select Brand --</option>
+            </select>
+          </div>
         </div>
-        <div class="select-wrapper">
-          <select id="car2" onchange="compareCars()">
-            <option value="">-- Select Second Car --</option>
-          </select>
+
+        <div class="control-group">
+          <h3>Car 2</h3>
+
+          <span class="select-label">Step 1: Select Brand</span>
+          <div class="select-wrapper">
+            <select id="brand2" onchange="updateModels(2)">
+              <option value="">-- Choose Brand --</option>
+            </select>
+          </div>
+
+          <span class="select-label">Step 2: Select Model</span>
+          <div class="select-wrapper">
+            <select id="car2" onchange="compareCars()" disabled>
+              <option value="">-- First Select Brand --</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <div id="placeholder" class="placeholder">
-        Please select two car models from the lists above to start comparing.
+        Please use the filters above to select two vehicles for comparison.
       </div>
 
       <div id="comparisonResult" class="comparison-card"></div>
     </div>
 
     <script>
-      // Translated Data
+      // DATA SOURCE
       const carData = [
         {
           id: 1,
@@ -1065,32 +1121,12 @@
         },
       ];
 
-      const car1Select = document.getElementById("car1");
-      const car2Select = document.getElementById("car2");
-      const resultDiv = document.getElementById("comparisonResult");
-      const placeholder = document.getElementById("placeholder");
-
-      function initDropdowns() {
-        carData.forEach((car, index) => {
-          const option1 = document.createElement("option");
-          option1.value = index;
-          option1.textContent = car.name;
-          car1Select.appendChild(option1);
-
-          const option2 = document.createElement("option");
-          option2.value = index;
-          option2.textContent = car.name;
-          car2Select.appendChild(option2);
-        });
-      }
-
-      // Configuration for fields: Labels and comparison logic
-      // logic: 'high' (higher is better), 'low' (lower is better), or null (no comparison)
+      // LOGIC CONFIG
       const fieldConfig = [
         { key: "brand", label: "Brand", logic: null },
         { key: "class", label: "Class/Segment", logic: null },
         { key: "year", label: "Year", logic: null },
-        { key: "price", label: "Price", logic: null }, // Price is subjective (cheap vs prestige)
+        { key: "price", label: "Price", logic: null },
         { key: "status", label: "Condition", logic: null },
         { key: "seats", label: "Seats", logic: null },
         { key: "color", label: "Colors", logic: null },
@@ -1102,34 +1138,94 @@
         { key: "accel", label: "Acceleration (0-100km/h)", logic: "low" },
         { key: "fuel_cons", label: "Fuel Consumption", logic: "low" },
         { key: "tank", label: "Fuel Tank Capacity", logic: "high" },
-        { key: "dims", label: "Dimensions (L x W x H)", logic: null }, // Complex string comparison skipped for safety
+        { key: "dims", label: "Dimensions (L x W x H)", logic: null },
         { key: "desc", label: "Description", logic: null },
       ];
 
-      // Helper to extract number from string (e.g., "10.5 s" -> 10.5)
+      // Helper: Extract unique brands sorted alphabetically
+      function getUniqueBrands() {
+        const brands = carData.map((car) => car.brand);
+        return [...new Set(brands)].sort();
+      }
+
+      // DOM Elements
+      const brand1Select = document.getElementById("brand1");
+      const brand2Select = document.getElementById("brand2");
+      const car1Select = document.getElementById("car1");
+      const car2Select = document.getElementById("car2");
+      const resultDiv = document.getElementById("comparisonResult");
+      const placeholder = document.getElementById("placeholder");
+
+      // Init: Populate Brand Dropdowns
+      function initFilters() {
+        const brands = getUniqueBrands();
+
+        brands.forEach((brand) => {
+          // Add to Brand 1
+          const opt1 = document.createElement("option");
+          opt1.value = brand;
+          opt1.textContent = brand;
+          brand1Select.appendChild(opt1);
+
+          // Add to Brand 2
+          const opt2 = document.createElement("option");
+          opt2.value = brand;
+          opt2.textContent = brand;
+          brand2Select.appendChild(opt2);
+        });
+      }
+
+      // Logic: When a brand is selected, filter models
+      function updateModels(side) {
+        const brandSelect = side === 1 ? brand1Select : brand2Select;
+        const modelSelect = side === 1 ? car1Select : car2Select;
+        const selectedBrand = brandSelect.value;
+
+        // Reset model dropdown
+        modelSelect.innerHTML = '<option value="">-- Select Model --</option>';
+        modelSelect.disabled = true;
+
+        // Hide results if data changes
+        resultDiv.classList.remove("visible");
+        resultDiv.style.display = "none";
+        placeholder.style.display = "block";
+
+        if (selectedBrand) {
+          // Filter cars matching the brand
+          // We use the original array index as the value for easy lookup later
+          carData.forEach((car, index) => {
+            if (car.brand === selectedBrand) {
+              const option = document.createElement("option");
+              option.value = index; // Store original index
+              option.textContent = car.name;
+              modelSelect.appendChild(option);
+            }
+          });
+          modelSelect.disabled = false;
+        }
+      }
+
+      // Logic: Compare numbers
       function parseValue(str) {
         if (!str) return 0;
-        // Remove commas (Vietnamese style) to dots if any remain, though data is now English
         let cleanStr = str.toString().replace(/,/g, ".");
-        // Match the first number found (integer or float)
         let match = cleanStr.match(/[+-]?\d+(\.\d+)?/);
         return match ? parseFloat(match[0]) : 0;
       }
 
+      // Main Comparison Function
       function compareCars() {
         const index1 = car1Select.value;
         const index2 = car2Select.value;
 
         if (index1 === "" || index2 === "") {
-          resultDiv.classList.remove("visible");
-          setTimeout(() => (resultDiv.style.display = "none"), 500);
-          placeholder.style.display = "block";
-          return;
+          return; // Wait for both
         }
 
         placeholder.style.display = "none";
         resultDiv.style.display = "block";
 
+        // Small delay for animation
         setTimeout(() => resultDiv.classList.add("visible"), 10);
 
         const carA = carData[index1];
@@ -1186,7 +1282,8 @@
         resultDiv.innerHTML = html;
       }
 
-      initDropdowns();
+      // Start
+      initFilters();
     </script>
   </body>
 </html>
