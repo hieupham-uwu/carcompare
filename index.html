@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Car Spec Comparison</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f7f6;
+        margin: 0;
+        padding: 20px;
+        color: #333;
+      }
+      h1 {
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 30px;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .controls {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+      }
+      .select-wrapper {
+        position: relative;
+        width: 100%;
+        max-width: 400px;
+      }
+      select {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        appearance: none;
+        background-color: white;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+      }
+      select:focus {
+        outline: none;
+        border-color: #3498db;
+        box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+      }
+      .select-wrapper::after {
+        content: "▼";
+        font-size: 12px;
+        color: #999;
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+      }
+
+      .comparison-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.5s ease, transform 0.5s ease;
+        display: none;
+      }
+      .comparison-card.visible {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 15px 20px;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+        line-height: 1.6;
+      }
+
+      th.feature-col {
+        width: 20%;
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: #555;
+      }
+      td.car-col {
+        width: 40%;
+        vertical-align: top;
+      }
+
+      .header-row th {
+        background-color: #3498db;
+        color: white;
+        font-size: 1.2em;
+        text-align: center;
+        border: none;
+        padding: 20px;
+      }
+      .header-row th:first-child {
+        background-color: #2980b9;
+      }
+
+      tr:last-child td,
+      tr:last-child th {
+        border-bottom: none;
+      }
+
+      tbody tr:hover {
+        background-color: #fafafa;
+      }
+
+      .placeholder {
+        text-align: center;
+        padding: 50px;
+        color: #7f8c8d;
+        font-size: 1.1em;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Highlight Style */
+      .winner-text {
+        font-weight: bold;
+        color: #27ae60; /* Green color for better specs */
+      }
+
+      @media (max-width: 768px) {
+        .controls {
+          flex-direction: column;
+          align-items: center;
+        }
+        th,
+        td {
+          padding: 10px;
+          font-size: 14px;
+        }
+        .header-row th {
+          font-size: 1em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚗 Car Comparison Tool</h1>
+
+      <div class="controls">
+        <div class="select-wrapper">
+          <select id="car1" onchange="compareCars()">
+            <option value="">-- Select First Car --</option>
+          </select>
+        </div>
+        <div class="select-wrapper">
+          <select id="car2" onchange="compareCars()">
+            <option value="">-- Select Second Car --</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="placeholder" class="placeholder">
+        Please select two car models from the lists above to start comparing.
+      </div>
+
+      <div id="comparisonResult" class="comparison-card"></div>
+    </div>
+
+    <script>
+      // Translated Data
+      const carData = [
+        {
+          id: 1,
+          name: "Toyota Corolla Altis 1.8G 2024",
+          brand: "Toyota",
+          class: "Sedan C-Segment",
+          year: 2024,
+          price: "770 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White Pearl / Black / Grey",
+          drive: "FWD",
+          gearbox: "CVT",
+          fuel: "Petrol",
+          engine: "1.8L 4-cylinder",
+          power: "138 hp",
+          accel: "10.5 s",
+          fuel_cons: "6.5 L/100km",
+          tank: "50 L",
+          dims: "4630 × 1780 × 1435 mm",
+          desc: "Economical C-sedan, elegant design, durable, easy to drive, suitable for individuals.",
+        },
+        {
+          id: 2,
+          name: "Toyota Camry 2.5Q 2024",
+          brand: "Toyota",
+          class: "Sedan D-Segment",
+          year: 2024,
+          price: "1.4 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Black / White Pearl / Silver / Grey",
+          drive: "FWD",
+          gearbox: "8-speed Auto",
+          fuel: "Petrol",
+          engine: "2.5L 4-cylinder",
+          power: "207 hp",
+          accel: "8.3 s",
+          fuel_cons: "7.8 L/100km",
+          tank: "60 L",
+          dims: "4885 × 1840 × 1445 mm",
+          desc: "Luxury sedan, smooth operation, high-end amenities, suitable for business and family.",
+        },
+        {
+          id: 3,
+          name: "Toyota Vios 1.5E CVT 2024",
+          brand: "Toyota",
+          class: "Sedan B-Segment",
+          year: 2024,
+          price: "560 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Silver / White / Black",
+          drive: "FWD",
+          gearbox: "CVT",
+          fuel: "Petrol",
+          engine: "1.5L 4-cylinder",
+          power: "107 hp",
+          accel: "11.5 s",
+          fuel_cons: "5.8 L/100km",
+          tank: "42 L",
+          dims: "4425 × 1730 × 1475 mm",
+          desc: "National car, durable, fuel efficient, easy maintenance, for individuals and small families.",
+        },
+        {
+          id: 4,
+          name: "Toyota Fortuner 2.4AT 4x2 2024",
+          brand: "Toyota",
+          class: "SUV 7-Seater",
+          year: 2024,
+          price: "1.1 billion VND",
+          status: "Brand New",
+          seats: "7",
+          color: "White / Black / Silver / Grey",
+          drive: "RWD",
+          gearbox: "6-speed Auto",
+          fuel: "Diesel",
+          engine: "2.4L Diesel 4-cylinder",
+          power: "147 hp",
+          accel: "12.0 s",
+          fuel_cons: "8.5 L/100km",
+          tank: "80 L",
+          dims: "4795 × 1855 × 1835 mm",
+          desc: "Powerful SUV, off-road capable, durable operation, decent amenities for large families.",
+        },
+        {
+          id: 5,
+          name: "Toyota Yaris Cross Hybrid 2024",
+          brand: "Toyota",
+          class: "Compact SUV",
+          year: 2024,
+          price: "780 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Grey / Black / Red",
+          drive: "FWD",
+          gearbox: "e-CVT",
+          fuel: "Hybrid",
+          engine: "1.5L + Electric Motor",
+          power: "110 hp",
+          accel: "10.7 s",
+          fuel_cons: "4.5 L/100km",
+          tank: "36 L",
+          dims: "4180 × 1760 × 1590 mm",
+          desc: "Compact SUV, fuel efficient, smooth ride, youthful design, suitable for city driving.",
+        },
+        {
+          id: 6,
+          name: "Honda City RS 2024",
+          brand: "Honda",
+          class: "Sedan B-Segment",
+          year: 2024,
+          price: "609 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Red / White / Black / Grey",
+          drive: "FWD",
+          gearbox: "CVT",
+          fuel: "Petrol",
+          engine: "1.5L 4-cylinder",
+          power: "119 hp",
+          accel: "10.2 s",
+          fuel_cons: "5.6 L/100km",
+          tank: "40 L",
+          dims: "4553 × 1748 × 1467 mm",
+          desc: "Sporty B-sedan, great driving feel, spacious, suitable for young drivers.",
+        },
+        {
+          id: 7,
+          name: "Honda CR-V L AWD 2024",
+          brand: "Honda",
+          class: "Crossover 5+2",
+          year: 2024,
+          price: "1.1 billion VND",
+          status: "Brand New",
+          seats: "7 (5+2)",
+          color: "White Pearl / Black / Grey / Blue",
+          drive: "AWD",
+          gearbox: "CVT",
+          fuel: "Petrol",
+          engine: "1.5L Turbo",
+          power: "188 hp",
+          accel: "9.5 s",
+          fuel_cons: "7.5 L/100km",
+          tank: "57 L",
+          dims: "4623 × 1855 × 1679 mm",
+          desc: "Versatile Crossover, Honda Sensing safety, powerful engine, for modern families.",
+        },
+        {
+          id: 8,
+          name: "Honda Civic RS 2024",
+          brand: "Honda",
+          class: "Sedan C-Segment",
+          year: 2024,
+          price: "870 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Red / White / Black / Grey",
+          drive: "FWD",
+          gearbox: "CVT",
+          fuel: "Petrol",
+          engine: "1.5L Turbo",
+          power: "176 hp",
+          accel: "8.0 s",
+          fuel_cons: "6.8 L/100km",
+          tank: "47 L",
+          dims: "4678 × 1802 × 1415 mm",
+          desc: "Sporty C-sedan, coupe design, exciting drive, for speed lovers.",
+        },
+        {
+          id: 9,
+          name: "Hyundai Accent 1.5 AT Special 2024",
+          brand: "Hyundai",
+          class: "Sedan B-Segment",
+          year: 2024,
+          price: "542 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Red / Sand Gold",
+          drive: "FWD",
+          gearbox: "6-speed Auto",
+          fuel: "Petrol",
+          engine: "1.5L Smartstream",
+          power: "115 hp",
+          accel: "10.8 s",
+          fuel_cons: "6.2 L/100km",
+          tank: "45 L",
+          dims: "4440 × 1729 × 1470 mm",
+          desc: "Modern B-sedan, well-equipped, reasonable price, for young families and services.",
+        },
+        {
+          id: 10,
+          name: "Hyundai Santa Fe 2.5 Premium 2024",
+          brand: "Hyundai",
+          class: "SUV 7-Seater",
+          year: 2024,
+          price: "1.2 billion VND",
+          status: "Brand New",
+          seats: "7",
+          color: "White / Black / Sand Gold / Blue",
+          drive: "HTRAC (AWD)",
+          gearbox: "6-speed Auto",
+          fuel: "Petrol",
+          engine: "2.5L Smartstream",
+          power: "180 hp",
+          accel: "9.8 s",
+          fuel_cons: "9.2 L/100km",
+          tank: "67 L",
+          dims: "4785 × 1900 × 1685 mm",
+          desc: "Luxury 7-seater SUV, tech-loaded, spacious, suitable for large families.",
+        },
+        {
+          id: 11,
+          name: "Hyundai Tucson 2.0 Special 2024",
+          brand: "Hyundai",
+          class: "Crossover C-Segment",
+          year: 2024,
+          price: "925 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Red / Silver",
+          drive: "FWD",
+          gearbox: "6-speed Auto",
+          fuel: "Petrol",
+          engine: "2.0L Smartstream",
+          power: "156 hp",
+          accel: "10.0 s",
+          fuel_cons: "8.1 L/100km",
+          tank: "54 L",
+          dims: "4630 × 1865 × 1695 mm",
+          desc: "Futuristic crossover, spacious interior, high comfort, for stylish customers.",
+        },
+        {
+          id: 12,
+          name: "Kia Seltos 1.4 Turbo Premium 2024",
+          brand: "Kia",
+          class: "Urban SUV",
+          year: 2024,
+          price: "749 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Red / Orange / Black",
+          drive: "FWD",
+          gearbox: "7-speed DCT",
+          fuel: "Petrol",
+          engine: "1.4L Turbo",
+          power: "138 hp",
+          accel: "9.8 s",
+          fuel_cons: "6.9 L/100km",
+          tank: "50 L",
+          dims: "4315 × 1800 × 1645 mm",
+          desc: "Urban SUV, strong design, high ground clearance, many options, for active youth.",
+        },
+        {
+          id: 13,
+          name: "Kia Carnival 2.2D Signature 2024",
+          brand: "Kia",
+          class: "Luxury MPV",
+          year: 2024,
+          price: "1.4 billion VND",
+          status: "Brand New",
+          seats: "7 (Business Class)",
+          color: "White / Black / Blue / Grey",
+          drive: "FWD",
+          gearbox: "8-speed Auto",
+          fuel: "Diesel",
+          engine: "2.2L Smartstream D",
+          power: "199 hp",
+          accel: "10.7 s",
+          fuel_cons: "8.0 L/100km",
+          tank: "72 L",
+          dims: "5155 × 1995 × 1775 mm",
+          desc: "Large luxury MPV, comfortable business seats, for large families and VIPs.",
+        },
+        {
+          id: 14,
+          name: "Kia K3 1.6 Premium 2024",
+          brand: "Kia",
+          class: "Sedan C-Segment",
+          year: 2024,
+          price: "639 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Red / Blue / Black",
+          drive: "FWD",
+          gearbox: "6-speed Auto",
+          fuel: "Petrol",
+          engine: "1.6L Gamma",
+          power: "126 hp",
+          accel: "11.0 s",
+          fuel_cons: "6.6 L/100km",
+          tank: "50 L",
+          dims: "4640 × 1800 × 1450 mm",
+          desc: "Youthful C-sedan, tech-rich, competitive price, for first-time buyers.",
+        },
+        {
+          id: 15,
+          name: "Mazda 3 1.5 Luxury 2024",
+          brand: "Mazda",
+          class: "Sedan C-Segment",
+          year: 2024,
+          price: "669 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Crystal Red / White / Grey / Blue",
+          drive: "FWD",
+          gearbox: "6-speed Auto",
+          fuel: "Petrol",
+          engine: "1.5L SkyActiv-G",
+          power: "110 hp",
+          accel: "11.5 s",
+          fuel_cons: "6.3 L/100km",
+          tank: "51 L",
+          dims: "4660 × 1795 × 1440 mm",
+          desc: "Beautiful KODO design, minimalist luxury interior, smooth ride, for women and small families.",
+        },
+        {
+          id: 16,
+          name: "Mazda CX-5 2.0 Premium 2024",
+          brand: "Mazda",
+          class: "Crossover C-Segment",
+          year: 2024,
+          price: "829 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Crystal Red / White / Grey / Black",
+          drive: "FWD",
+          gearbox: "6-speed Auto",
+          fuel: "Petrol",
+          engine: "2.0L SkyActiv-G",
+          power: "154 hp",
+          accel: "9.8 s",
+          fuel_cons: "7.5 L/100km",
+          tank: "56 L",
+          dims: "4550 × 1840 × 1680 mm",
+          desc: "Best-selling crossover, trendy design, full amenities, good driving feel.",
+        },
+        {
+          id: 17,
+          name: "Ford Ranger Wildtrak 2024",
+          brand: "Ford",
+          class: "Pickup Truck",
+          year: 2024,
+          price: "979 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Orange / White / Black / Grey",
+          drive: "4x4",
+          gearbox: "10-speed Auto",
+          fuel: "Diesel",
+          engine: "2.0L Bi-Turbo",
+          power: "210 hp",
+          accel: "10.5 s",
+          fuel_cons: "8.2 L/100km",
+          tank: "80 L",
+          dims: "5362 × 1918 × 1875 mm",
+          desc: "Off-road king pickup, powerful, modern tech, versatile for work and family.",
+        },
+        {
+          id: 18,
+          name: "Ford Everest Titanium 4x2 2024",
+          brand: "Ford",
+          class: "SUV 7-Seater",
+          year: 2024,
+          price: "1.3 billion VND",
+          status: "Brand New",
+          seats: "7",
+          color: "Snow White / Black / Grey / Brown",
+          drive: "RWD",
+          gearbox: "6-speed Auto",
+          fuel: "Diesel",
+          engine: "2.0L Single Turbo",
+          power: "170 hp",
+          accel: "11.5 s",
+          fuel_cons: "8.6 L/100km",
+          tank: "80 L",
+          dims: "4914 × 1923 × 1842 mm",
+          desc: "American muscle SUV, spacious, superior safety, solid ride, for travel-loving families.",
+        },
+        {
+          id: 19,
+          name: "Ford Territory Titanium 2024",
+          brand: "Ford",
+          class: "Crossover C-Segment",
+          year: 2024,
+          price: "899 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Red / Blue",
+          drive: "FWD",
+          gearbox: "7-speed DCT",
+          fuel: "Petrol",
+          engine: "1.5L Ecoboost",
+          power: "160 hp",
+          accel: "10.2 s",
+          fuel_cons: "7.2 L/100km",
+          tank: "60 L",
+          dims: "4630 × 1935 × 1706 mm",
+          desc: "Modern crossover, widest interior in segment, lots of tech, for young families.",
+        },
+        {
+          id: 20,
+          name: "Mitsubishi Xpander Premium 2024",
+          brand: "Mitsubishi",
+          class: "MPV",
+          year: 2024,
+          price: "658 million VND",
+          status: "Brand New",
+          seats: "7",
+          color: "White / Black / Silver / Brown",
+          drive: "FWD",
+          gearbox: "4-speed Auto",
+          fuel: "Petrol",
+          engine: "1.5L MIVEC",
+          power: "104 hp",
+          accel: "12.5 s",
+          fuel_cons: "7.1 L/100km",
+          tank: "45 L",
+          dims: "4595 × 1750 × 1750 mm",
+          desc: "Best-selling MPV, high clearance, practical interior, durable, for business and family.",
+        },
+        {
+          id: 21,
+          name: "Mitsubishi Outlander 2.0 CVT Premium 2024",
+          brand: "Mitsubishi",
+          class: "Crossover 5+2",
+          year: 2024,
+          price: "950 million VND",
+          status: "Brand New",
+          seats: "7 (5+2)",
+          color: "White / Black / Grey / Red",
+          drive: "FWD",
+          gearbox: "CVT",
+          fuel: "Petrol",
+          engine: "2.0L MIVEC",
+          power: "145 hp",
+          accel: "11.0 s",
+          fuel_cons: "7.8 L/100km",
+          tank: "63 L",
+          dims: "4695 × 1810 × 1710 mm",
+          desc: "Family crossover, good soundproofing, smooth ride, deep cooling AC, for traditional families.",
+        },
+        {
+          id: 22,
+          name: "VinFast VF5 Plus 2024",
+          brand: "VinFast",
+          class: "A-SUV Electric",
+          year: 2024,
+          price: "479 million VND (no battery)",
+          status: "Brand New",
+          seats: "5",
+          color: "Blue / Orange / White / Red",
+          drive: "FWD",
+          gearbox: "1-speed",
+          fuel: "Electric",
+          engine: "Electric Motor",
+          power: "134 hp",
+          accel: "10.9 s",
+          fuel_cons: "~12.5 kWh/100km",
+          tank: "37.23 kWh",
+          dims: "3965 × 1720 × 1580 mm",
+          desc: "Compact city EV, flexible, low operating cost, suitable for city commuting.",
+        },
+        {
+          id: 23,
+          name: "VinFast VF8 Eco 2024",
+          brand: "VinFast",
+          class: "D-SUV Electric",
+          year: 2024,
+          price: "1.1 billion VND (no battery)",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Grey / Blue / Red",
+          drive: "AWD",
+          gearbox: "1-speed",
+          fuel: "Electric",
+          engine: "Dual Electric Motors",
+          power: "349 hp",
+          accel: "5.9 s",
+          fuel_cons: "~20 kWh/100km",
+          tank: "82 kWh",
+          dims: "4750 × 1934 × 1667 mm",
+          desc: "Smart EV SUV, powerful, Italian design, advanced ADAS, for modern families.",
+        },
+        {
+          id: 24,
+          name: "VinFast VF9 Plus 2024",
+          brand: "VinFast",
+          class: "E-SUV Electric",
+          year: 2024,
+          price: "1.6 billion VND (no battery)",
+          status: "Brand New",
+          seats: "7 (or 6)",
+          color: "White / Black / Grey / Blue",
+          drive: "AWD",
+          gearbox: "1-speed",
+          fuel: "Electric",
+          engine: "Dual Electric Motors",
+          power: "402 hp",
+          accel: "6.5 s",
+          fuel_cons: "~24 kWh/100km",
+          tank: "92 kWh",
+          dims: "5118 × 2254 × 1696 mm",
+          desc: "Large luxury EV SUV, spacious, high-class amenities, for businessmen and large families.",
+        },
+        {
+          id: 25,
+          name: "Mercedes-Benz C200 Avantgarde 2024",
+          brand: "Mercedes-Benz",
+          class: "Small Luxury Sedan",
+          year: 2024,
+          price: "1.7 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Blue / Grey",
+          drive: "RWD",
+          gearbox: "9-speed Auto",
+          fuel: "Petrol",
+          engine: "1.5L Turbo EQ Boost",
+          power: "204 hp",
+          accel: "7.3 s",
+          fuel_cons: "6.8 L/100km",
+          tank: "66 L",
+          dims: "4751 × 1820 × 1438 mm",
+          desc: "Luxury sedan, exquisite design, modern interior, for successful young entrepreneurs.",
+        },
+        {
+          id: 26,
+          name: "Mercedes-Benz GLC 200 4Matic 2024",
+          brand: "Mercedes-Benz",
+          class: "Small Luxury SUV",
+          year: 2024,
+          price: "2.3 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Grey",
+          drive: "AWD",
+          gearbox: "9-speed Auto",
+          fuel: "Petrol",
+          engine: "2.0L Turbo EQ Boost",
+          power: "204 hp",
+          accel: "7.8 s",
+          fuel_cons: "7.6 L/100km",
+          tank: "62 L",
+          dims: "4716 × 1890 × 1640 mm",
+          desc: "Best-selling luxury SUV, versatile, smooth ride, German brand class.",
+        },
+        {
+          id: 27,
+          name: "BMW 320i SportLine 2024",
+          brand: "BMW",
+          class: "Small Luxury Sedan",
+          year: 2024,
+          price: "1.5 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Blue / Grey",
+          drive: "RWD",
+          gearbox: "8-speed Auto",
+          fuel: "Petrol",
+          engine: "2.0L TwinPower Turbo",
+          power: "184 hp",
+          accel: "7.1 s",
+          fuel_cons: "6.5 L/100km",
+          tank: "59 L",
+          dims: "4709 × 1827 × 1435 mm",
+          desc: "Sports sedan, truest driving feel, masculine design, for driving enthusiasts.",
+        },
+        {
+          id: 28,
+          name: "BMW X3 xDrive20i 2024",
+          brand: "BMW",
+          class: "Small Luxury SUV",
+          year: 2024,
+          price: "1.8 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Blue",
+          drive: "AWD",
+          gearbox: "8-speed Auto",
+          fuel: "Petrol",
+          engine: "2.0L TwinPower Turbo",
+          power: "184 hp",
+          accel: "8.3 s",
+          fuel_cons: "7.9 L/100km",
+          tank: "65 L",
+          dims: "4708 × 1891 × 1676 mm",
+          desc: "Dynamic high-clearance SUV, flexible operation, spacious interior, for active young families.",
+        },
+        {
+          id: 29,
+          name: "Audi A4 40 TFSI 2024",
+          brand: "Audi",
+          class: "Small Luxury Sedan",
+          year: 2024,
+          price: "1.7 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Grey / Red",
+          drive: "FWD",
+          gearbox: "7-speed Auto",
+          fuel: "Petrol",
+          engine: "2.0L Turbo",
+          power: "190 hp",
+          accel: "7.3 s",
+          fuel_cons: "6.2 L/100km",
+          tank: "54 L",
+          dims: "4762 × 1847 × 1431 mm",
+          desc: "Tech sedan, fashionable design, modern lighting, gentle operation.",
+        },
+        {
+          id: 30,
+          name: "Lexus ES 250 2024",
+          brand: "Lexus",
+          class: "Mid-size Luxury Sedan",
+          year: 2024,
+          price: "2.6 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Beige / Blue",
+          drive: "FWD",
+          gearbox: "8-speed Auto",
+          fuel: "Petrol",
+          engine: "2.5L 4-cylinder",
+          power: "204 hp",
+          accel: "9.1 s",
+          fuel_cons: "7.0 L/100km",
+          tank: "60 L",
+          dims: "4975 × 1865 × 1445 mm",
+          desc: "Absolute quiet sedan, exquisite interior, holds value, for businessmen liking silence.",
+        },
+        {
+          id: 31,
+          name: "Volvo XC60 Ultimate 2024",
+          brand: "Volvo",
+          class: "Small Luxury SUV",
+          year: 2024,
+          price: "2.3 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Grey / Silver",
+          drive: "AWD",
+          gearbox: "8-speed Auto",
+          fuel: "Petrol (Mild Hybrid)",
+          engine: "2.0L Turbo + Supercharge",
+          power: "300 hp",
+          accel: "6.2 s",
+          fuel_cons: "8.0 L/100km",
+          tank: "71 L",
+          dims: "4708 × 1902 × 1658 mm",
+          desc: "Safest SUV in world, minimalist Nordic design, great audio, for safety-conscious families.",
+        },
+        {
+          id: 32,
+          name: "Porsche Macan 2024",
+          brand: "Porsche",
+          class: "Sport Luxury SUV",
+          year: 2024,
+          price: "3.3 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Black / Yellow / Grey",
+          drive: "AWD",
+          gearbox: "7-speed PDK",
+          fuel: "Petrol",
+          engine: "2.0L Turbo",
+          power: "261 hp",
+          accel: "6.4 s",
+          fuel_cons: "9.5 L/100km",
+          tank: "65 L",
+          dims: "4726 × 1922 × 1621 mm",
+          desc: "True sports SUV, exciting drive, classy brand, for speed enthusiasts.",
+        },
+        {
+          id: 33,
+          name: "Subaru Forester 2.0 i-S EyeSight 2024",
+          brand: "Subaru",
+          class: "Crossover C-Segment",
+          year: 2024,
+          price: "969 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Blue / White / Silver / Black",
+          drive: "AWD",
+          gearbox: "CVT",
+          fuel: "Petrol",
+          engine: "2.0L Boxer",
+          power: "156 hp",
+          accel: "10.3 s",
+          fuel_cons: "7.8 L/100km",
+          tank: "63 L",
+          dims: "4625 × 1815 × 1730 mm",
+          desc: "Practical Japanese car, stable, good visibility, high safety with EyeSight, for families.",
+        },
+        {
+          id: 34,
+          name: "Peugeot 3008 GT 2024",
+          brand: "Peugeot",
+          class: "Crossover C-Segment",
+          year: 2024,
+          price: "1.1 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Red / White / Grey / Black",
+          drive: "FWD",
+          gearbox: "6-speed Auto",
+          fuel: "Petrol",
+          engine: "1.6L Turbo",
+          power: "165 hp",
+          accel: "9.8 s",
+          fuel_cons: "7.5 L/100km",
+          tank: "53 L",
+          dims: "4510 × 1850 × 1662 mm",
+          desc: "Unique French design, cockpit-like interior, solid ride, for stylish customers.",
+        },
+        {
+          id: 35,
+          name: "Nissan Almera VL 2024",
+          brand: "Nissan",
+          class: "Sedan B-Segment",
+          year: 2024,
+          price: "595 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "White / Red / Grey / Black",
+          drive: "FWD",
+          gearbox: "CVT",
+          fuel: "Petrol",
+          engine: "1.0L Turbo",
+          power: "100 hp",
+          accel: "11.0 s",
+          fuel_cons: "5.3 L/100km",
+          tank: "35 L",
+          dims: "4495 × 1740 × 1460 mm",
+          desc: "Most fuel-efficient B-sedan, punchy Turbo engine, cold AC, for city driving.",
+        },
+        {
+          id: 36,
+          name: "Suzuki XL7 2024",
+          brand: "Suzuki",
+          class: "MPV / SUV Hybrid",
+          year: 2024,
+          price: "599 million VND",
+          status: "Brand New",
+          seats: "7",
+          color: "Orange / Khaki / White / Black",
+          drive: "FWD",
+          gearbox: "4-speed Auto",
+          fuel: "Petrol",
+          engine: "1.5L",
+          power: "103 hp",
+          accel: "12.8 s",
+          fuel_cons: "6.6 L/100km",
+          tank: "45 L",
+          dims: "4450 × 1775 × 1710 mm",
+          desc: "Affordable 7-seater, durable, economical, low maintenance, for budget families.",
+        },
+        {
+          id: 37,
+          name: "Isuzu Mu-X Premium 2024",
+          brand: "Isuzu",
+          class: "SUV 7-Seater",
+          year: 2024,
+          price: "1.2 billion VND",
+          status: "Brand New",
+          seats: "7",
+          color: "White / Silver / Black",
+          drive: "AWD",
+          gearbox: "6-speed Auto",
+          fuel: "Diesel",
+          engine: "1.9L Turbo Diesel",
+          power: "150 hp",
+          accel: "13.0 s",
+          fuel_cons: "7.5 L/100km",
+          tank: "80 L",
+          dims: "4850 × 1870 × 1875 mm",
+          desc: "Rock-solid SUV, spacious, fuel-efficient, suitable for business or rough roads.",
+        },
+        {
+          id: 38,
+          name: "MG5 Luxury 2024",
+          brand: "MG",
+          class: "Sedan C-Segment",
+          year: 2024,
+          price: "588 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Yellow / Red / White / Black",
+          drive: "FWD",
+          gearbox: "CVT",
+          fuel: "Petrol",
+          engine: "1.5L",
+          power: "112 hp",
+          accel: "11.5 s",
+          fuel_cons: "6.5 L/100km",
+          tank: "45 L",
+          dims: "4675 × 1842 × 1480 mm",
+          desc: "Sporty coupe design, cheapest in C-segment, well-equipped, for youth.",
+        },
+        {
+          id: 39,
+          name: "BYD Atto 3 2024",
+          brand: "BYD",
+          class: "Small Electric SUV",
+          year: 2024,
+          price: "750 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Sunrise Orange / White / Black / Grey",
+          drive: "RWD",
+          gearbox: "1-speed EV",
+          fuel: "Electric",
+          engine: "Electric Motor",
+          power: "204 hp",
+          accel: "7.3 s",
+          fuel_cons: "~15.4 kWh/100km",
+          tank: "60 kWh",
+          dims: "4450 × 1820 × 1610 mm",
+          desc: "Urban EV SUV, economical, smooth, modern design, for tech-loving families.",
+        },
+        {
+          id: 40,
+          name: "Mercedes-AMG G63 2024",
+          brand: "Mercedes-Benz",
+          class: "Luxury Off-road SUV",
+          year: 2024,
+          price: "12.5 billion VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Obsidian Black / White / Grey",
+          drive: "AWD",
+          gearbox: "9-speed Auto",
+          fuel: "Petrol",
+          engine: "4.0L V8 Biturbo",
+          power: "585 hp",
+          accel: "4.5 s",
+          fuel_cons: "14.0 L/100km",
+          tank: "100 L",
+          dims: "4870 × 1980 × 1960 mm",
+          desc: "Powerful, luxurious, AMG icon, excellent off-road, for high-performance enthusiasts.",
+        },
+        {
+          id: 41,
+          name: "Toyota Prius 2024",
+          brand: "Toyota",
+          class: "Hybrid C-Sedan",
+          year: 2024,
+          price: "890 million VND",
+          status: "Brand New",
+          seats: "5",
+          color: "Silver Metallic / White / Grey / Blue",
+          drive: "FWD",
+          gearbox: "e-CVT",
+          fuel: "Hybrid",
+          engine: "1.8L + Electric Motor",
+          power: "121 hp",
+          accel: "10.0 s",
+          fuel_cons: "4.2 L/100km",
+          tank: "43 L",
+          dims: "4600 × 1780 × 1430 mm",
+          desc: "Pioneer Hybrid sedan, super efficient, eco-friendly, smooth, for eco-conscious customers.",
+        },
+        {
+          id: 42,
+          name: "Lexus LX600 Urban 2024",
+          brand: "Lexus",
+          class: "Large Luxury SUV",
+          year: 2024,
+          price: "8.5 billion VND",
+          status: "Brand New",
+          seats: "7",
+          color: "Black / White / Grey / Moss Green",
+          drive: "AWD",
+          gearbox: "10-speed Auto",
+          fuel: "Petrol",
+          engine: "3.5L V6 Twin Turbo",
+          power: "409 hp",
+          accel: "6.9 s",
+          fuel_cons: "12.5 L/100km",
+          tank: "110 L",
+          dims: "5100 × 1990 × 1865 mm",
+          desc: "Ground private jet, supreme comfort, good off-road, symbol of success.",
+        },
+      ];
+
+      const car1Select = document.getElementById("car1");
+      const car2Select = document.getElementById("car2");
+      const resultDiv = document.getElementById("comparisonResult");
+      const placeholder = document.getElementById("placeholder");
+
+      function initDropdowns() {
+        carData.forEach((car, index) => {
+          const option1 = document.createElement("option");
+          option1.value = index;
+          option1.textContent = car.name;
+          car1Select.appendChild(option1);
+
+          const option2 = document.createElement("option");
+          option2.value = index;
+          option2.textContent = car.name;
+          car2Select.appendChild(option2);
+        });
+      }
+
+      // Configuration for fields: Labels and comparison logic
+      // logic: 'high' (higher is better), 'low' (lower is better), or null (no comparison)
+      const fieldConfig = [
+        { key: "brand", label: "Brand", logic: null },
+        { key: "class", label: "Class/Segment", logic: null },
+        { key: "year", label: "Year", logic: null },
+        { key: "price", label: "Price", logic: null }, // Price is subjective (cheap vs prestige)
+        { key: "status", label: "Condition", logic: null },
+        { key: "seats", label: "Seats", logic: null },
+        { key: "color", label: "Colors", logic: null },
+        { key: "drive", label: "Drivetrain", logic: null },
+        { key: "gearbox", label: "Transmission", logic: null },
+        { key: "fuel", label: "Fuel Type", logic: null },
+        { key: "engine", label: "Engine", logic: null },
+        { key: "power", label: "Max Power", logic: "high" },
+        { key: "accel", label: "Acceleration (0-100km/h)", logic: "low" },
+        { key: "fuel_cons", label: "Fuel Consumption", logic: "low" },
+        { key: "tank", label: "Fuel Tank Capacity", logic: "high" },
+        { key: "dims", label: "Dimensions (L x W x H)", logic: null }, // Complex string comparison skipped for safety
+        { key: "desc", label: "Description", logic: null },
+      ];
+
+      // Helper to extract number from string (e.g., "10.5 s" -> 10.5)
+      function parseValue(str) {
+        if (!str) return 0;
+        // Remove commas (Vietnamese style) to dots if any remain, though data is now English
+        let cleanStr = str.toString().replace(/,/g, ".");
+        // Match the first number found (integer or float)
+        let match = cleanStr.match(/[+-]?\d+(\.\d+)?/);
+        return match ? parseFloat(match[0]) : 0;
+      }
+
+      function compareCars() {
+        const index1 = car1Select.value;
+        const index2 = car2Select.value;
+
+        if (index1 === "" || index2 === "") {
+          resultDiv.classList.remove("visible");
+          setTimeout(() => (resultDiv.style.display = "none"), 500);
+          placeholder.style.display = "block";
+          return;
+        }
+
+        placeholder.style.display = "none";
+        resultDiv.style.display = "block";
+
+        setTimeout(() => resultDiv.classList.add("visible"), 10);
+
+        const carA = carData[index1];
+        const carB = carData[index2];
+
+        let html = "<table>";
+
+        html += `
+                <thead>
+                    <tr class="header-row">
+                        <th class="feature-col">Specification</th>
+                        <th>${carA.name}</th>
+                        <th>${carB.name}</th>
+                    </tr>
+                </thead>
+                <tbody>
+            `;
+
+        fieldConfig.forEach((field) => {
+          let valA = carA[field.key] || "-";
+          let valB = carB[field.key] || "-";
+
+          let displayA = valA;
+          let displayB = valB;
+
+          // Comparison Logic
+          if (field.logic && valA !== "-" && valB !== "-") {
+            let numA = parseValue(valA);
+            let numB = parseValue(valB);
+
+            if (numA !== numB) {
+              if (field.logic === "high") {
+                if (numA > numB)
+                  displayA = `<span class="winner-text">${valA}</span>`;
+                else displayB = `<span class="winner-text">${valB}</span>`;
+              } else if (field.logic === "low") {
+                if (numA < numB)
+                  displayA = `<span class="winner-text">${valA}</span>`;
+                else displayB = `<span class="winner-text">${valB}</span>`;
+              }
+            }
+          }
+
+          html += `
+                    <tr>
+                        <th class="feature-col">${field.label}</th>
+                        <td class="car-col">${displayA}</td>
+                        <td class="car-col">${displayB}</td>
+                    </tr>
+                `;
+        });
+
+        html += "</tbody></table>";
+        resultDiv.innerHTML = html;
+      }
+
+      initDropdowns();
+    </script>
+  </body>
+</html>
